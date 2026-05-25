@@ -246,6 +246,14 @@ function refreshTagFilter() {
     });
 }
 
+// ── Sort tabs ──
+function setSortTab(btn) {
+    document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('fSort').value = btn.dataset.value;
+    render();
+}
+
 // ── Render ──
 function render() {
     const search = document.getElementById('searchInput').value.toLowerCase();
