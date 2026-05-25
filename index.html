@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSA Revision Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+    <div class="header-left">
+        <h1><i class="fas fa-code"></i> DSA Revision Tracker</h1>
+        <p>Track, revise, and master data structures &amp; algorithms</p>
+    </div>
+    <div class="header-right">
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> <span>Add Question</span>
+        </button>
+        <button class="btn btn-icon" id="darkBtn" onclick="toggleDark()" title="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</header>
+
+<!-- ── Main ── -->
+<div class="container">
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+        <div class="stat-card total">
+            <div class="stat-icon"><i class="fas fa-list-check"></i></div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card weak">
+            <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="stat-value" id="statWeak">0</div>
+            <div class="stat-label">Weak (Confidence ≤ 2)</div>
+        </div>
+        <div class="stat-card strong">
+            <div class="stat-icon"><i class="fas fa-star"></i></div>
+            <div class="stat-value" id="statStrong">0</div>
+            <div class="stat-label">Strong (Confidence ≥ 4)</div>
+        </div>
+        <div class="stat-card topic">
+            <div class="stat-icon"><i class="fas fa-brain"></i></div>
+            <div class="stat-value" id="statTopic" style="font-size:1rem; padding-top:0.3rem">—</div>
+            <div class="stat-label">Most Weak Topic</div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input class="search-input" id="searchInput" type="text"
+                   placeholder="Search by question name…" oninput="render()">
+        </div>
+        <select class="filter-select" id="fPlatform" onchange="render()">
+            <option value="">All Platforms</option>
+            <option>LeetCode</option>
+            <option>GFG</option>
+            <option>Codeforces</option>
+            <option>Other</option>
+        </select>
+        <select class="filter-select" id="fConfidence" onchange="render()">
+            <option value="">All Confidence</option>
+            <option value="1">1 – Very Weak</option>
+            <option value="2">2 – Weak</option>
+            <option value="3">3 – Medium</option>
+            <option value="4">4 – Strong</option>
+            <option value="5">5 – Very Strong</option>
+        </select>
+        <select class="filter-select" id="fTag" onchange="render()">
+            <option value="">All Tags</option>
+        </select>
+        <select class="filter-select" id="fSort" onchange="render()">
+            <option value="newest">Newest First</option>
+            <option value="revision">By Next Revision</option>
+            <option value="conf-asc">Confidence ↑</option>
+            <option value="conf-desc">Confidence ↓</option>
+        </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2><i class="fas fa-table" style="margin-right:.4rem;color:var(--accent)"></i>Questions</h2>
+            <span id="qCount">0 questions</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Platform</th>
+                        <th>Tags</th>
+                        <th>Confidence</th>
+                        <th>Last Revised</th>
+                        <th>Next Revision</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display:none">
+                <i class="fas fa-inbox"></i>
+                <p>No questions found</p>
+                <small>Add a question to get started, or adjust your filters.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Add / Edit Modal ── -->
+<div class="modal-overlay" id="formModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="formTitle"></h2>
+            <button class="btn btn-icon" onclick="closeForm()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>Question Name *</label>
+                    <input type="text" id="fName" placeholder="e.g., Two Sum" required>
+                </div>
+                <div class="form-group full">
+                    <label>Question Link</label>
+                    <input type="url" id="fLink" placeholder="https://leetcode.com/problems/…">
+                </div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="fqPlatform">
+                        <option>LeetCode</option>
+                        <option>GFG</option>
+                        <option>Codeforces</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Confidence Level</label>
+                    <select id="fConfLevel">
+                        <option value="1">1 – Very Weak</option>
+                        <option value="2">2 – Weak</option>
+                        <option value="3" selected>3 – Medium</option>
+                        <option value="4">4 – Strong</option>
+                        <option value="5">5 – Very Strong</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Topic Tags (comma-separated)</label>
+                    <input type="text" id="fTags" placeholder="e.g., DP, Graph, Trees, Sliding Window">
+                </div>
+                <div class="form-group">
+                    <label>Time Complexity</label>
+                    <input type="text" id="fTime" placeholder="e.g., O(n log n)">
+                </div>
+                <div class="form-group">
+                    <label>Last Revised Date</label>
+                    <input type="date" id="fDate">
+                </div>
+                <div class="form-group full">
+                    <label>Approach / Solution Notes</label>
+                    <textarea id="fApproach" placeholder="Brief explanation of your approach…"></textarea>
+                </div>
+                <div class="form-group full">
+                    <label>Mistake Notes</label>
+                    <textarea id="fMistakes" placeholder="Common mistakes, gotchas, or things to remember…"></textarea>
+                </div>
+            </div>
+            <input type="hidden" id="fId">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveQ()">
+                <i class="fas fa-save"></i> Save Question
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Detail Modal ── -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal" style="max-width:540px">
+        <div class="modal-header">
+            <h2 id="detailTitle"></h2>
+            <button class="btn btn-icon" onclick="closeDetail()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="detailBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeDetail()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-container" id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
