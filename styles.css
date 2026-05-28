@@ -232,7 +232,7 @@ header {
     flex-shrink: 0;
 }
 
-.search-input {
+.search-wrapper .search-input {
     width: 100%;
     padding: 0.5rem 0;
     border: none;
@@ -241,8 +241,9 @@ header {
     font-size: 0.875rem;
     font-family: 'Inter', sans-serif;
     min-width: 0;
+    box-shadow: none;
 }
-.search-input:focus { outline: none; }
+.search-wrapper .search-input:focus { outline: none; box-shadow: none; }
 
 .filter-select {
     padding: 0.5rem 0.75rem;
@@ -269,11 +270,76 @@ header {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.table-title-row {
+    display: flex;
     align-items: center;
     justify-content: space-between;
 }
-.table-header h2 { font-size: 1rem; font-weight: 600; }
-.table-header span { font-size: 0.8rem; color: var(--text-secondary); }
+.table-title-row h2 { font-size: 1rem; font-weight: 600; }
+.table-title-row span { font-size: 0.8rem; color: var(--text-secondary); }
+
+.table-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: nowrap;
+}
+
+.table-controls-row .search-wrapper {
+    flex: 65;
+    min-width: 0;
+}
+
+.table-controls-row .filter-select {
+    flex: 35;
+    min-width: 0;
+}
+
+.sort-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* ── Inline confidence filter in <th> ── */
+.th-with-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.th-filter {
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.35rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.th-filter:focus { outline: none; border-color: var(--accent); }
+
+/* ── Tag more button ── */
+.tag-more {
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--accent);
+    border: 1px dashed var(--accent);
+    font-size: 0.72rem;
+    font-weight: 500;
+}
 
 .table-wrapper { overflow-x: auto; }
 
@@ -540,6 +606,80 @@ textarea { resize: vertical; min-height: 80px; }
 .toast.error   i { color: var(--red-text); }
 .toast.info    i { color: var(--accent); }
 
+/* ── Login screen ── */
+.login-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    z-index: 500;
+}
+
+.login-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: var(--shadow-lg);
+}
+
+.login-icon {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+
+.login-card h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.login-card p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+}
+
+.login-google-btn {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* ── User info in header ── */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--border-color);
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-name {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
     header { padding: 0.75rem 1rem; }
@@ -548,6 +688,9 @@ textarea { resize: vertical; min-height: 80px; }
     .dashboard { grid-template-columns: repeat(2, 1fr); }
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
+    .user-name { display: none; }
+    .sort-inline { margin-left: 0; }
+    .sort-label { display: none; }
 }
 @media (max-width: 480px) {
     .header-right .btn span { display: none; }

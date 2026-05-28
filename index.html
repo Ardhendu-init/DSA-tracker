@@ -10,6 +10,21 @@
 </head>
 <body>
 
+<!-- ── Login Screen ── -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-card">
+        <div class="login-icon"><i class="fas fa-code"></i></div>
+        <h2>DSA Revision Tracker</h2>
+        <p>Sign in to sync your progress across all devices</p>
+        <button class="btn btn-primary login-google-btn" onclick="signIn()">
+            <i class="fab fa-google"></i> Sign in with Google
+        </button>
+    </div>
+</div>
+
+<!-- ── Main App ── -->
+<div id="mainApp" style="display:none">
+
 <!-- ── Header ── -->
 <header>
     <div class="header-left">
@@ -23,6 +38,13 @@
         <button class="btn btn-icon" id="darkBtn" onclick="toggleDark()" title="Toggle dark mode">
             <i class="fas fa-moon"></i>
         </button>
+        <div class="user-info" id="userInfo">
+            <img id="userAvatar" src="" alt="" class="user-avatar">
+            <span id="userDisplayName" class="user-name"></span>
+            <button class="btn btn-icon" onclick="signOutUser()" title="Sign out">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
     </div>
 </header>
 
@@ -53,50 +75,33 @@
         </div>
     </div>
 
-    <!-- Controls -->
-    <div class="controls">
-        <div class="controls-top">
-            <div class="search-wrapper">
-                <i class="fas fa-search"></i>
-                <input class="search-input" id="searchInput" type="text"
-                       placeholder="Search by question name…" oninput="render()">
-            </div>
-            <select class="filter-select" id="fPlatform" onchange="render()">
-                <option value="">All Platforms</option>
-                <option>LeetCode</option>
-                <option>GFG</option>
-                <option>Codeforces</option>
-                <option>Other</option>
-            </select>
-            <select class="filter-select" id="fConfidence" onchange="render()">
-                <option value="">All Confidence</option>
-                <option value="1">1 – Very Weak</option>
-                <option value="2">2 – Weak</option>
-                <option value="3">3 – Medium</option>
-                <option value="4">4 – Strong</option>
-                <option value="5">5 – Very Strong</option>
-            </select>
-            <select class="filter-select" id="fTag" onchange="render()">
-                <option value="">All Tags</option>
-            </select>
-        </div>
-        <div class="controls-sort">
-            <span class="sort-label">Sort by</span>
-            <div class="sort-tabs">
-                <button class="sort-tab active" data-value="newest" onclick="setSortTab(this)">Newest First</button>
-                <button class="sort-tab" data-value="revision" onclick="setSortTab(this)">Next Revision</button>
-                <button class="sort-tab" data-value="conf-asc" onclick="setSortTab(this)">Conf ↑</button>
-                <button class="sort-tab" data-value="conf-desc" onclick="setSortTab(this)">Conf ↓</button>
-            </div>
-            <input type="hidden" id="fSort" value="newest">
-        </div>
-    </div>
-
     <!-- Table -->
     <div class="table-container">
         <div class="table-header">
-            <h2><i class="fas fa-table" style="margin-right:.4rem;color:var(--accent)"></i>Questions</h2>
-            <span id="qCount">0 questions</span>
+            <div class="table-title-row">
+                <h2><i class="fas fa-table" style="margin-right:.4rem;color:var(--accent)"></i>Questions</h2>
+                <span id="qCount">0 questions</span>
+            </div>
+            <div class="table-controls-row">
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input class="search-input" id="searchInput" type="text"
+                           placeholder="Search questions…" oninput="render()">
+                </div>
+                <select class="filter-select" id="fTag" onchange="render()">
+                    <option value="">All Tags</option>
+                </select>
+                <div class="sort-inline">
+                    <span class="sort-label">Sort</span>
+                    <div class="sort-tabs">
+                        <button class="sort-tab active" data-value="newest" onclick="setSortTab(this)">Newest</button>
+                        <button class="sort-tab" data-value="revision" onclick="setSortTab(this)">Next Rev.</button>
+                        <button class="sort-tab" data-value="conf-asc" onclick="setSortTab(this)">Conf ↑</button>
+                        <button class="sort-tab" data-value="conf-desc" onclick="setSortTab(this)">Conf ↓</button>
+                    </div>
+                    <input type="hidden" id="fSort" value="newest">
+                </div>
+            </div>
         </div>
         <div class="table-wrapper">
             <table>
@@ -105,7 +110,19 @@
                         <th>Question</th>
                         <th>Platform</th>
                         <th>Tags</th>
-                        <th>Confidence</th>
+                        <th>
+                            <div class="th-with-filter">
+                                Confidence
+                                <select class="th-filter" id="fConfidence" onchange="render()">
+                                    <option value="">All</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                        </th>
                         <th>Last Revised</th>
                         <th>Next Revision</th>
                         <th>Actions</th>
@@ -121,6 +138,8 @@
         </div>
     </div>
 </div>
+
+</div><!-- /#mainApp -->
 
 <!-- ── Add / Edit Modal ── -->
 <div class="modal-overlay" id="formModal">
@@ -207,6 +226,11 @@
 <!-- ── Toast Container ── -->
 <div class="toast-container" id="toasts"></div>
 
+<!-- ── Firebase SDK ── -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

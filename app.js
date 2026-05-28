@@ -1,9 +1,14 @@
+// ── Firebase Init ──
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
 // ── State ──
-let qs = JSON.parse(localStorage.getItem('dsa_qs') || '[]');
+let currentUser = null;
+let qs = [];
 
 const DAYS = { 1: 2, 2: 3, 3: 5, 4: 7, 5: 10 };
 
-function save() { localStorage.setItem('dsa_qs', JSON.stringify(qs)); }
 function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function today(){ return new Date().toISOString().split('T')[0]; }
 
@@ -19,7 +24,70 @@ function fmtDate(s) {
     return new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ── Dark mode ──
+// ── Auth ──
+auth.onAuthStateChanged(async user => {
+    if (user) {
+        currentUser = user;
+        const avatar = document.getElementById('userAvatar');
+        if (user.photoURL) {
+            avatar.src = user.photoURL;
+            avatar.style.display = 'block';
+        } else {
+            avatar.style.display = 'none';
+        }
+        document.getElementById('userDisplayName').textContent = user.displayName || user.email;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = '';
+        await loadQuestions();
+    } else {
+        currentUser = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+});
+
+function signIn() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => toast(err.message, 'error'));
+}
+
+function signOutUser() {
+    auth.signOut();
+}
+
+// ── Firestore helpers ──
+function qsRef() {
+    return db.collection('users').doc(currentUser.uid).collection('questions');
+}
+
+async function loadQuestions() {
+    try {
+        const snap = await qsRef().get();
+        qs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        refreshTagFilter();
+        render();
+    } catch (e) {
+        toast('Failed to load data. Check your connection.', 'error');
+    }
+}
+
+async function persistQ(q) {
+    try {
+        await qsRef().doc(q.id).set(q);
+    } catch (e) {
+        toast('Save failed. Check your connection.', 'error');
+    }
+}
+
+async function removeQ(id) {
+    try {
+        await qsRef().doc(id).delete();
+    } catch (e) {
+        toast('Delete failed. Check your connection.', 'error');
+    }
+}
+
+// ── Dark mode (theme stays in localStorage — no auth needed) ──
 (function () {
     const t = localStorage.getItem('dsa_theme') || 'light';
     if (t === 'dark') {
@@ -86,7 +154,7 @@ function openEditModal(id) {
 
 function closeForm() { document.getElementById('formModal').classList.remove('active'); }
 
-function saveQ() {
+async function saveQ() {
     const name = document.getElementById('fName').value.trim();
     if (!name) { toast('Question name is required.', 'error'); return; }
     const id = document.getElementById('fId').value;
@@ -113,29 +181,30 @@ function saveQ() {
         toast('Question added!');
     }
 
-    save();
     closeForm();
     refreshTagFilter();
     render();
+
+    await persistQ(q);
 }
 
 // ── Delete / Mark revised ──
-function deleteQ(id) {
+async function deleteQ(id) {
     if (!confirm('Delete this question? This cannot be undone.')) return;
     qs = qs.filter(x => x.id !== id);
-    save();
     refreshTagFilter();
     render();
     toast('Deleted.', 'info');
+    await removeQ(id);
 }
 
-function markRevised(id) {
+async function markRevised(id) {
     const i = qs.findIndex(x => x.id === id);
     if (i === -1) return;
     qs[i].lastRevised = today();
-    save();
     render();
     toast('Marked as revised today!');
+    await persistQ(qs[i]);
 }
 
 // ── Detail modal ──
@@ -257,14 +326,12 @@ function setSortTab(btn) {
 // ── Render ──
 function render() {
     const search = document.getElementById('searchInput').value.toLowerCase();
-    const plat   = document.getElementById('fPlatform').value;
     const conf   = document.getElementById('fConfidence').value;
     const tag    = document.getElementById('fTag').value;
     const sort   = document.getElementById('fSort').value;
 
     let data = qs.filter(q => {
         if (search && !q.name.toLowerCase().includes(search)) return false;
-        if (plat   && q.platform !== plat) return false;
         if (conf   && q.confidence !== parseInt(conf)) return false;
         if (tag    && !(q.tags || []).some(t => t.toLowerCase() === tag.toLowerCase())) return false;
         return true;
@@ -302,8 +369,8 @@ function render() {
     tbody.innerHTML = data.map(q => {
         const nr    = nextRev(q.lastRevised, q.confidence);
         const over  = nr && nr <= today();
-        const tags  = (q.tags || []).slice(0, 4);
-        const extra = (q.tags || []).length - 4;
+        const tags  = (q.tags || []).slice(0, 2);
+        const extra = (q.tags || []).length - 2;
         const dots  = Array.from({ length: 5 }, (_, i) => {
             const cls = i < q.confidence ? `filled lv-${q.confidence}` : '';
             return `<div class="conf-dot ${cls}"></div>`;
@@ -323,7 +390,7 @@ function render() {
             <td>
                 <div class="tag-list">
                     ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
-                    ${extra > 0 ? `<span class="tag">+${extra}</span>` : ''}
+                    ${extra > 0 ? `<button class="tag tag-more" onclick="openDetail('${q.id}')" title="View all tags">+${extra} more</button>` : ''}
                 </div>
             </td>
             <td>
@@ -352,7 +419,3 @@ function render() {
 
     updateDashboard();
 }
-
-// ── Init ──
-refreshTagFilter();
-render();
